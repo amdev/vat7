@@ -107,6 +107,17 @@ input.num { text-align: right; font-variant-numeric: tabular-nums; }
 .field-row .field { min-width: 0; }
 @media (max-width: 380px) { .field-row { grid-template-columns: 1fr; gap: 0; } }
 .kv-strong b { font-size: 1.3rem; }
+.btn-block { width: 100%; }
+.muted.small { font-size: .8rem; margin: 6px 0 12px; }
+h3.sub { font-size: .9rem; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.card-details { padding: 0; }
+.card-details summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: center; gap: 8px; }
+.card-details summary::-webkit-details-marker { display: none; }
+.card-details summary::after { content: '▾'; margin-left: auto; color: var(--muted); transition: transform .15s; }
+.card-details[open] summary::after { transform: rotate(180deg); }
+.card-details summary h2 { margin: 0; }
+.card-details > .field { margin: 0 16px 12px; }
+.card-details > .field:last-child { margin-bottom: 16px; }
 .check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: .95rem; cursor: pointer; }
 .check input { width: 20px; height: 20px; margin: 3px 0 0; flex: none; accent-color: var(--primary); }
 
@@ -216,4 +227,7 @@ input.num { text-align: right; font-variant-numeric: tabular-nums; }
   .pf-sign { margin-top: 28pt; margin-left: auto; width: 60%; text-align: center; }
   .pf-sign div { margin: 4pt 0; }
   .pf-foot { display: flex; justify-content: space-between; margin-top: 20pt; font-size: 10pt; }
+  .pf-signs { display: flex; justify-content: space-around; gap: 16pt; margin-top: 26pt; }
+  .pf-signbox { text-align: center; flex: 1; }
+  .pf-signbox div { margin: 3pt 0; }
 }

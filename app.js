@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
   const KEYS = {
     settings: 'vat7:settings',
     history: 'vat7:history',
@@ -12,7 +12,7 @@
   };
   const DEFAULTS = {
     vatRate: 7, whtRate: 1, payeeType: 'juristic', thresholdAmount: 10000, theme: 'auto',
-    agency: { name: '', taxId: '', address: '', phone: '', signer: '' },
+    agency: { name: '', taxId: '', address: '', phone: '', signer: '', short: '', staff: '', financeHead: '', director: '' },
   };
   const PAYEE_LABEL = { juristic: 'นิติบุคคล (บริษัท/หจก.)', individual: 'บุคคลธรรมดา' };
   const MAX_HISTORY = 100;
@@ -111,6 +111,7 @@
   const QUICK_DEFAULT = { amount: '', inclusive: true, whtRate: null, payeeType: null, penalty: '' };
   const ITEMS_DEFAULT = {
     docNo: '', fy: '', title: '', vendor: '', vendorTaxId: '', vendorAddress: '',
+    plan: '', output: '', activity: '', budgetType: '', remark: '',
     inclusive: true, whtRate: null, payeeType: null, penalty: '', rows: [],
   };
   const newRow = () => ({ name: '', qty: '', price: '' });
@@ -284,8 +285,12 @@
   Object.assign(it, {
     docNo: $('#it-docno'), fy: $('#it-fy'), title: $('#it-title'), vendor: $('#it-vendor'), taxId: $('#it-taxid'),
     address: $('#it-address'), rows: $('#it-rows'), count: $('#it-count'),
+    plan: $('#it-plan'), output: $('#it-output'), activity: $('#it-activity'), budget: $('#it-budget'), remark: $('#it-remark'),
   });
-  const TEXT_FIELDS = [['docNo', 'docNo'], ['fy', 'fy'], ['title', 'title'], ['vendor', 'vendor'], ['taxId', 'vendorTaxId'], ['address', 'vendorAddress']];
+  const TEXT_FIELDS = [
+    ['docNo', 'docNo'], ['fy', 'fy'], ['title', 'title'], ['vendor', 'vendor'], ['taxId', 'vendorTaxId'], ['address', 'vendorAddress'],
+    ['plan', 'plan'], ['output', 'output'], ['activity', 'activity'], ['budget', 'budgetType'], ['remark', 'remark'],
+  ];
 
   const lineTotal = row => round2(parseNum(row.qty) * parseNum(row.price));
   const activeRows = () => items.rows.filter(row => lineTotal(row) > 0 || (row.name || '').trim());
@@ -408,9 +413,12 @@
     const a = settings.agency;
     return {
       name: a.name || dots(40), taxId: a.taxId || dots(16), address: a.address || dots(60),
-      phone: a.phone || dots(12), signer: a.signer || dots(30),
+      phone: a.phone || dots(12), signer: a.signer || dots(30), short: a.short || a.name || dots(10),
+      staff: a.staff ? `(${a.staff})` : `(${dots(30)})`, financeHead: a.financeHead ? `(${a.financeHead})` : `(${dots(30)})`,
+      director: a.director ? `(${a.director})` : `(${dots(30)})`,
     };
   }
+  const signBlock = (label, name) => `<div class="pf-signbox"><div>ลงชื่อ ${dots(30)} ${label}</div><div>${esc(name)}</div></div>`;
   function docHeader() {
     return { docNo: items.docNo || dots(12), fy: items.fy || String(fiscalYearBE()) };
   }
@@ -488,6 +496,38 @@
     return html;
   }
 
+  // งบหน้าประกอบฎีกา
+  function sheetBudget() {
+    const r = itemsResult(), a = agencyLine(), h = docHeader();
+    let html = `<div class="pf pf-portrait">`;
+    html += `<h2 class="pf-center">งบหน้าประกอบฎีกาที่ ${esc(h.docNo)}/${esc(h.fy)}</h2>`;
+    html += `<div class="pf-line pf-center">จากแผนงาน ${esc(items.plan || dots(30))} ผลผลิต/โครงการ ${esc(items.output || dots(30))}</div>`;
+    html += `<div class="pf-line pf-center">กิจกรรมหลัก ${esc(items.activity || dots(30))} ${esc(items.budgetType || 'งบดำเนินงาน (ค่าตอบแทน ใช้สอย และวัสดุ)')}</div>`;
+    html += `<table class="pf-table"><thead><tr><th>ที่</th><th>รายการ</th><th class="num">จำนวนเงิน</th><th class="num">รวมเงิน</th><th>หมายเหตุ</th></tr></thead><tbody>`;
+    html += `<tr><td></td><td>${esc(items.title || '')}</td><td></td><td></td><td></td></tr>`;
+    html += `<tr><td class="c">1</td><td>${esc(items.vendor || dots(30))}</td><td class="num">${fmt(r.total)}</td><td class="num">${fmt(r.total)}</td><td>${esc(items.remark || '')}</td></tr>`;
+    html += `<tr class="pf-spacer"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr><tr class="pf-spacer"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>`;
+    html += `</tbody><tfoot><tr><td></td><td class="c">รวมทั้งสิ้น</td><td class="num">${fmt(r.total)}</td><td class="num">${fmt(r.total)}</td><td></td></tr></tfoot></table>`;
+    html += `<div class="pf-text">(${esc(bahtText(r.total))})</div>`;
+    html += `<div class="pf-signs">${signBlock('เจ้าหน้าที่', a.staff)}${signBlock(`ผู้เบิก ผอ.${a.short}`, a.director)}</div></div>`;
+    return html;
+  }
+
+  // ใบสั่งจ่าย
+  function sheetPayOrder() {
+    const r = itemsResult(), a = agencyLine(), h = docHeader();
+    let html = `<div class="pf pf-portrait">`;
+    html += `<h2 class="pf-center">ใบสั่งจ่าย</h2><div class="pf-line pf-center">ฎีกาที่ ${esc(h.docNo)}/${esc(h.fy)}</div>`;
+    html += `<table class="pf-table"><thead><tr><th>ที่</th><th>ชื่อผู้รับเงิน</th><th class="num">จำนวนเงินเต็ม</th><th class="num">ค่าปรับ</th><th class="num">ภาษี</th><th class="num">จำนวนเงินคงเหลือ</th><th>หมายเหตุ</th></tr></thead><tbody>`;
+    html += `<tr><td class="c">1</td><td>${esc(items.vendor || dots(30))}</td><td class="num">${fmt(r.total)}</td><td class="num">${fmt(r.penalty)}</td><td class="num">${fmt(r.wht)}</td><td class="num">${fmt(r.net)}</td><td>${esc(items.remark || '')}</td></tr>`;
+    html += `<tr class="pf-spacer"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr class="pf-spacer"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+    html += `</tbody><tfoot><tr><td></td><td class="c">รวมทั้งสิ้น</td><td class="num">${fmt(r.total)}</td><td class="num">${fmt(r.penalty)}</td><td class="num">${fmt(r.wht)}</td><td class="num">${fmt(r.net)}</td><td></td></tr></tfoot></table>`;
+    html += `<div class="pf-text">จำนวนเงินคงเหลือ (${esc(bahtText(r.net))})</div>`;
+    html += `<div class="pf-signs">${signBlock('เจ้าหน้าที่', a.staff)}${signBlock('ผอ.กลุ่มบริหารงานการเงินฯ', a.financeHead)}</div>`;
+    html += `<div class="pf-signs">${signBlock(`รอง ผอ.${a.short}`, `(${dots(30)})`)}<div class="pf-signbox"><div>อนุมัติ</div><div>ลงชื่อ ${dots(30)} ผอ.${esc(a.short)}</div><div>${esc(a.director)}</div></div></div></div>`;
+    return html;
+  }
+
   function sheetQuick() {
     const r = quickResult();
     let html = `<div class="pf pf-portrait"><h2 class="pf-center">ผลคำนวณภาษีมูลค่าเพิ่ม</h2><div class="pf-meta">พิมพ์เมื่อ ${esc(thaiDate())}</div><table class="pf-table"><tbody>`;
@@ -495,7 +535,7 @@
     return html + `</tbody></table></div>`;
   }
 
-  const SHEETS = { items: sheetItems, attach: sheetAttach, cert: sheetCert, quick: sheetQuick };
+  const SHEETS = { items: sheetItems, attach: sheetAttach, cert: sheetCert, budget: sheetBudget, payorder: sheetPayOrder, quick: sheetQuick };
   let pendingPrint = null;
   function buildPrintSheet(kind) {
     const fn = SHEETS[kind] || sheetItems;
@@ -517,6 +557,154 @@
     if (b.dataset.print !== 'items' && !settings.agency.name) toast('แนะนำให้กรอกข้อมูลส่วนราชการในหน้าตั้งค่าก่อน');
     printDoc(b.dataset.print);
   }));
+
+  // ---------- Export Excel (.xlsx) ----------
+  // สร้างสมุดงาน 6 ชีตตามชุดเอกสารฎีกา โดยใส่สูตรคำนวณจริงในเซลล์ (แก้ตัวเลขแล้ว Excel คำนวณใหม่เอง)
+  function buildWorkbook() {
+    const X = window.MiniXlsx;
+    if (!X) throw new Error('xlsx-writer not loaded');
+    const { Sheet, S } = X;
+    const r = itemsResult(), a = settings.agency, h = docHeader();
+    const payee = items.payeeType || settings.payeeType;
+    const rows = activeRows();
+    const rate = +settings.vatRate, whtRate = r.whtRate;
+    const docRef = `${h.docNo}/${h.fy}`;
+    const blank = (v, n = 20) => (v && String(v).trim()) || dots(n);
+
+    // ---- ชีต "รายการ" ----
+    const wsItems = new Sheet('รายการ', { cols: [8, 44, 12, 16, 18] });
+    wsItems.text(0, 0, `รายการซื้อ/จ้าง: ${items.title || ''}`, S.BOLD).merge(0, 0, 0, 4);
+    wsItems.text(1, 0, `ฎีกาที่ ${docRef} · ผู้ขาย ${items.vendor || ''} · ราคาต่อหน่วย${items.inclusive ? 'รวม VAT แล้ว' : 'ยังไม่รวม VAT'}`).merge(1, 0, 1, 4);
+    ['ลำดับ', 'รายการ', 'จำนวน', 'ราคา/หน่วย', 'จำนวนเงิน'].forEach((t, c) => wsItems.text(3, c, t, S.BH));
+    const first = 4, last = first + Math.max(rows.length, 1) - 1;
+    (rows.length ? rows : [newRow()]).forEach((row, i) => {
+      const rr = first + i;
+      wsItems.num(rr, 0, i + 1, S.BC).text(rr, 1, (row.name || '').trim() || '-', S.BT);
+      wsItems.num(rr, 2, parseNum(row.qty), S.BN).num(rr, 3, parseNum(row.price), S.BN);
+      wsItems.formula(rr, 4, `ROUND(C${rr + 1}*D${rr + 1},2)`, S.BN);
+    });
+    const sumRow = last + 1;
+    wsItems.text(sumRow, 0, 'รวม', S.BH).merge(sumRow, 0, sumRow, 3);
+    wsItems.formula(sumRow, 4, `SUM(E${first + 1}:E${last + 1})`, S.BNB);
+    const itemsSum = `'รายการ'!E${sumRow + 1}`;
+
+    // ---- ชีต "แนบฎีกา" (แบบแนบฎีกาแสดงรายการภาษี) ----
+    const wsA = new Sheet('แนบฎีกา', { cols: [8, 26, 26, 22, 15, 14, 15, 15, 11, 15], landscape: true, fitWidth: true });
+    wsA.text(0, 0, 'แบบแนบฎีกาแสดงรายการภาษี', S.TITLE).merge(0, 0, 0, 9);
+    wsA.text(1, 2, 'สำหรับ', S.RIGHT).text(1, 3, `( ${payee === 'juristic' ? '/' : ' '} ) บริษัท ห้างหุ้นส่วนนิติบุคคล`).merge(1, 3, 1, 6);
+    wsA.text(2, 3, `( ${payee === 'individual' ? '/' : ' '} ) บุคคลธรรมดา`).merge(2, 3, 2, 6);
+    wsA.text(3, 0, `ฎีกาที่ ${docRef}     ลงวันที่ ${dots(12)} เดือน ${dots(24)} พ.ศ. ${dots(8)}`).merge(3, 0, 3, 9);
+    wsA.text(4, 0, `ส่วนราชการ ${blank(a.name, 40)}   เลขประจำตัวผู้เสียภาษีอากร ${blank(a.taxId, 16)}`).merge(4, 0, 4, 9);
+    wsA.text(5, 0, `ที่ตั้งส่วนราชการ ${blank(a.address, 60)}   โทรศัพท์ ${blank(a.phone, 12)}`).merge(5, 0, 5, 9);
+    const heads = ['ลำดับที่', 'ชื่อผู้ประกอบการและเลขประจำตัวผู้เสียภาษี', 'เลขทะเบียนภาษีมูลค่าเพิ่มและที่อยู่', 'รายการซื้อ/จ้าง', 'จำนวนเงินที่เบิกตามฎีกา', 'ภาษีมูลค่าเพิ่ม', 'ค่าสินค้าหรือบริการ', `เงินหักผลักส่งภาษีเงินได้ ${whtRate ? pct(whtRate) : ''}`.trim(), 'ค่าปรับ', 'จำนวนเงินขอรับ'];
+    heads.forEach((t, c) => { wsA.text(7, c, t, S.BH); wsA.style(8, c, S.BH); wsA.merge(7, c, 8, c); });
+    const A = 9; // แถวข้อมูล (แถวที่ 10 ใน Excel)
+    const An = A + 1;
+    wsA.num(A, 0, 1, S.BC).text(A, 1, blank(items.vendor, 20), S.BT).text(A, 2, items.vendorAddress || '', S.BT).text(A, 3, items.title || '', S.BT);
+    if (items.inclusive) {
+      wsA.formula(A, 4, itemsSum, S.BN);
+      wsA.formula(A, 5, `ROUND(E${An}*${rate}/(100+${rate}),2)`, S.BN);
+      wsA.formula(A, 6, `E${An}-F${An}`, S.BN);
+    } else {
+      wsA.formula(A, 6, itemsSum, S.BN);
+      wsA.formula(A, 5, `ROUND(G${An}*${rate}/100,2)`, S.BN);
+      wsA.formula(A, 4, `G${An}+F${An}`, S.BN);
+    }
+    wsA.formula(A, 7, r.whtApplies ? `ROUND(G${An}*${whtRate}/100,2)` : '0', S.BN);
+    wsA.num(A, 8, r.penalty, S.BN);
+    wsA.formula(A, 9, `E${An}-H${An}-I${An}`, S.BN);
+    wsA.text(A + 1, 1, items.vendorTaxId || '', S.BT);
+    wsA.box(A + 1, 0, A + 4, 9);
+    const T = A + 5, Tn = T + 1;
+    wsA.text(T, 0, 'รวม', S.BH).merge(T, 0, T, 3);
+    for (let c = 4; c <= 9; c++) wsA.formula(T, c, `SUM(${X.colLetter(c)}${An}:${X.colLetter(c)}${T})`, S.BNB);
+    wsA.text(T + 1, 0, `(${bahtText(r.net)})`).merge(T + 1, 0, T + 1, 9);
+    wsA.text(T + 3, 5, `ลงชื่อ ${dots(40)}`).merge(T + 3, 5, T + 3, 9);
+    wsA.text(T + 4, 5, `ตำแหน่ง ${blank(a.signer, 30)}`).merge(T + 4, 5, T + 4, 9);
+    wsA.text(T + 6, 1, `กรมบัญชีกลาง เลขที่รับ ${dots(20)}`).text(T + 6, 5, 'ส่งกรมสรรพากร หรือสรรพากรจังหวัด');
+    const ref = c => `'แนบฎีกา'!${X.colLetter(c)}${An}`;
+    const [rTotal, rVat, rBase, rWht, rPen, rNet] = [4, 5, 6, 7, 8, 9].map(ref);
+
+    // ---- ชีต "ฎีกา" (สรุปยอดขอเบิก) ----
+    const wsD = new Sheet('ฎีกา', { cols: [30, 22, 8, 40] });
+    wsD.text(0, 0, 'ฎีกาขอเบิกเงินงบประมาณ (จ่ายตรงผู้ขาย)', S.TITLE).merge(0, 0, 0, 3);
+    wsD.text(1, 0, blank(a.name, 40), S.CENTER).merge(1, 0, 1, 3);
+    const info = [['ฎีกาที่', docRef], ['รายการ', items.title], ['ผู้ขาย / ผู้รับเงิน', items.vendor], ['เลขประจำตัวผู้เสียภาษี', items.vendorTaxId], ['ที่อยู่', (items.vendorAddress || '').replace(/\n/g, ' ')], ['ประเภทผู้รับเงิน', PAYEE_LABEL[payee]], ['แผนงาน', items.plan], ['ผลผลิต/โครงการ', items.output], ['กิจกรรมหลัก', items.activity], ['งบรายจ่าย', items.budgetType]];
+    info.forEach(([k, v], i) => { wsD.text(3 + i, 0, `${k} :`, S.RIGHT).text(3 + i, 1, v || '').merge(3 + i, 1, 3 + i, 3); });
+    const D0 = 3 + info.length + 1;
+    const money = [['จำนวนเงินที่ขอเบิก', rTotal], [`ภาษีมูลค่าเพิ่ม ${pct(rate)}`, rVat], ['ค่าสินค้าหรือบริการ (ก่อน VAT)', rBase], [`ภาษีหัก ณ ที่จ่าย ${whtRate ? pct(whtRate) : ''}`.trim(), rWht], ['หัก ค่าปรับ', rPen]];
+    money.forEach(([k, f], i) => { wsD.text(D0 + i, 0, `${k} :`, S.RIGHT).formula(D0 + i, 1, f, S.NUM).text(D0 + i, 2, 'บาท'); });
+    const Dn = D0 + money.length;
+    wsD.text(Dn, 0, 'จำนวนเงินที่ขอรับ :', S.BOLD).formula(Dn, 1, `B${D0 + 1}-B${D0 + 4}-B${D0 + 5}`, S.NUMB).text(Dn, 2, 'บาท');
+    wsD.text(Dn + 1, 0, 'ตัวอักษร :', S.RIGHT).text(Dn + 1, 1, `(${bahtText(r.net)})`).merge(Dn + 1, 1, Dn + 1, 3);
+    wsD.text(Dn + 3, 0, `ลงชื่อ ${dots(30)} เจ้าหน้าที่`).text(Dn + 4, 0, blank(a.staff, 30), S.CENTER);
+    wsD.text(Dn + 3, 1, `ลงชื่อ ${dots(30)} ผอ.${blank(a.short, 8)}`).merge(Dn + 3, 1, Dn + 3, 3).text(Dn + 4, 1, blank(a.director, 30), S.CENTER).merge(Dn + 4, 1, Dn + 4, 3);
+
+    // ---- ชีต "งบหน้า" ----
+    const wsB = new Sheet('งบหน้า', { cols: [6, 46, 16, 16, 18] });
+    wsB.text(0, 0, `งบหน้าประกอบฎีกาที่ ${docRef}`, S.TITLE).merge(0, 0, 0, 4);
+    wsB.text(1, 0, `จากแผนงาน ${blank(items.plan, 30)} ผลผลิต/โครงการ ${blank(items.output, 30)}`, S.CENTER).merge(1, 0, 1, 4);
+    wsB.text(2, 0, `กิจกรรมหลัก ${blank(items.activity, 30)} ${items.budgetType || 'งบดำเนินงาน (ค่าตอบแทน ใช้สอย และวัสดุ)'}`, S.CENTER).merge(2, 0, 2, 4);
+    ['ที่', 'รายการ', 'จำนวนเงิน', 'รวมเงิน', 'หมายเหตุ'].forEach((t, c) => wsB.text(3, c, t, S.BH));
+    wsB.text(4, 1, items.title || '', S.BT).box(4, 0, 4, 4);
+    wsB.num(5, 0, 1, S.BC).text(5, 1, blank(items.vendor, 30), S.BT).formula(5, 2, rTotal, S.BN).formula(5, 3, 'C6', S.BN).text(5, 4, items.remark || '', S.BT);
+    wsB.box(6, 0, 16, 4);
+    wsB.text(17, 1, 'รวมทั้งสิ้น', S.BH).formula(17, 2, 'SUM(C5:C17)', S.BNB).formula(17, 3, 'SUM(D5:D17)', S.BNB).style(17, 0, S.BT).style(17, 4, S.BT);
+    wsB.text(18, 1, `(${bahtText(r.total)})`);
+    wsB.text(20, 0, `ลงชื่อ ${dots(26)} เจ้าหน้าที่`).merge(20, 0, 20, 1).text(20, 2, `ผู้เบิก ${dots(26)} ผอ.${blank(a.short, 8)}`).merge(20, 2, 20, 4);
+    wsB.text(21, 0, blank(a.staff, 30), S.CENTER).merge(21, 0, 21, 1).text(21, 2, blank(a.director, 30), S.CENTER).merge(21, 2, 21, 4);
+
+    // ---- ชีต "ใบสั่งจ่าย" ----
+    const wsP = new Sheet('ใบสั่งจ่าย', { cols: [6, 34, 16, 12, 12, 18, 16], landscape: true, fitWidth: true });
+    wsP.text(0, 0, 'ใบสั่งจ่าย', S.TITLE).merge(0, 0, 0, 6);
+    wsP.text(1, 0, `ฎีกาที่ ${docRef}`, S.CENTER).merge(1, 0, 1, 6);
+    ['ที่', 'ชื่อผู้รับเงิน', 'จำนวนเงินเต็ม', 'ค่าปรับ', 'ภาษี', 'จำนวนเงินคงเหลือ', 'หมายเหตุ'].forEach((t, c) => wsP.text(2, c, t, S.BH));
+    wsP.num(3, 0, 1, S.BC).text(3, 1, blank(items.vendor, 30), S.BT).formula(3, 2, rTotal, S.BN).formula(3, 3, rPen, S.BN).formula(3, 4, rWht, S.BN).formula(3, 5, 'C4-D4-E4', S.BN).text(3, 6, items.remark || '', S.BT);
+    wsP.box(4, 0, 13, 6);
+    wsP.text(14, 1, 'รวมทั้งสิ้น', S.BH).style(14, 0, S.BT).style(14, 6, S.BT);
+    ['C', 'D', 'E', 'F'].forEach((L, i) => wsP.formula(14, 2 + i, `SUM(${L}4:${L}14)`, S.BNB));
+    wsP.text(15, 1, `จำนวนเงินคงเหลือ (${bahtText(r.net)})`).merge(15, 1, 15, 6);
+    wsP.text(17, 1, `ลงชื่อ ${dots(26)} เจ้าหน้าที่`).text(17, 4, `ลงชื่อ ${dots(26)} ผอ.กลุ่มบริหารงานการเงินฯ`).merge(17, 4, 17, 6);
+    wsP.text(18, 1, blank(a.staff, 30), S.CENTER).text(18, 4, blank(a.financeHead, 30), S.CENTER).merge(18, 4, 18, 6);
+    wsP.text(20, 1, `ลงชื่อ ${dots(26)} รอง ผอ.${blank(a.short, 8)}`).text(20, 4, 'อนุมัติ', S.CENTER).merge(20, 4, 20, 6);
+    wsP.text(21, 1, `(${dots(30)})`, S.CENTER).text(21, 4, `ลงชื่อ ${dots(26)} ผอ.${blank(a.short, 8)}`).merge(21, 4, 21, 6);
+    wsP.text(22, 4, blank(a.director, 30), S.CENTER).merge(22, 4, 22, 6);
+
+    // ---- ชีต "รับรองภาษี" (บก.28) ----
+    const wsC = new Sheet('รับรองภาษี', { cols: [30, 30, 20, 16, 14] });
+    wsC.text(0, 0, 'ใบรับรองการหักภาษี ณ ที่จ่าย (แบบ บก.28)', S.TITLE).merge(0, 0, 0, 4);
+    wsC.text(1, 0, `ส่วนราชการ ${blank(a.name, 40)} เลขประจำตัวผู้เสียภาษี ${blank(a.taxId, 16)}`).merge(1, 0, 1, 4);
+    wsC.text(2, 0, `ที่อยู่ ${blank(a.address, 60)}`).merge(2, 0, 2, 4);
+    wsC.text(4, 0, `          ขอรับรองว่าได้หักภาษี ณ ที่จ่าย ตามฎีกาเงินจากคลังที่ ${docRef}`).merge(4, 0, 4, 4);
+    wsC.text(5, 0, `ลงวันที่ ${dots(14)} เดือน ${dots(28)} พ.ศ. ${dots(10)}`).merge(5, 0, 5, 4);
+    wsC.text(6, 0, `ชื่อผู้ถูกหักภาษี ${blank(items.vendor, 40)} เลขประจำตัวผู้เสียภาษี ${blank(items.vendorTaxId, 16)}`).merge(6, 0, 6, 4);
+    wsC.text(7, 0, `ที่อยู่ ${blank((items.vendorAddress || '').replace(/\n/g, ' '), 60)}`).merge(7, 0, 7, 4);
+    ['รายการ', 'ประเภทเงินได้ที่จ่าย', 'วันเดือนปีที่จ่ายเงิน', 'จำนวนเงินได้', 'ภาษี'].forEach((t, c) => wsC.text(9, c, t, S.BH));
+    wsC.text(10, 0, `( ${payee === 'juristic' ? '/' : ' '} ) ภาษีเงินได้นิติบุคคล`, S.BT).text(10, 1, items.title || '', S.BT).style(10, 2, S.BT).formula(10, 3, rBase, S.BN).formula(10, 4, rWht, S.BN);
+    wsC.text(11, 0, `( ${payee === 'individual' ? '/' : ' '} ) ภาษีเงินได้บุคคลธรรมดา`, S.BT).box(11, 1, 11, 4);
+    wsC.text(12, 0, `( ${r.penalty > 0 ? '/' : ' '} ) ค่าปรับ`, S.BT).box(12, 1, 12, 3);
+    if (r.penalty > 0) wsC.formula(12, 4, rPen, S.BN); else wsC.style(12, 4, S.BN);
+    wsC.box(13, 0, 15, 4);
+    wsC.text(16, 0, 'รวม', S.BH).merge(16, 0, 16, 2).formula(16, 3, 'SUM(D11:D16)', S.BNB).formula(16, 4, 'SUM(E11:E16)', S.BNB);
+    wsC.text(18, 0, 'รวมเป็นเงิน', S.BOLD).text(18, 1, `(${bahtText(round2(r.wht + r.penalty))})`).merge(18, 1, 18, 4);
+    wsC.text(20, 1, `(ลงชื่อ) ${dots(30)}`).merge(20, 1, 20, 4).text(21, 1, blank(a.signer, 30)).merge(21, 1, 21, 4);
+
+    return X.build([wsD, wsItems, wsB, wsP, wsA, wsC]);
+  }
+  function exportExcel() {
+    try {
+      const blob = buildWorkbook();
+      const safe = s => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').trim();
+      const name = `ฎีกา-${safe(items.docNo) || 'ใหม่'}-${safe(items.fy || fiscalYearBE())}${items.vendor ? '-' + safe(items.vendor).slice(0, 30) : ''}.xlsx`;
+      window.MiniXlsx.download(blob, name);
+      toast('สร้างไฟล์ Excel แล้ว');
+    } catch (err) {
+      console.error(err);
+      toast('สร้างไฟล์ Excel ไม่สำเร็จ');
+    }
+  }
+  $('#it-export').addEventListener('click', exportExcel);
+  window.__vat7ExportBlob = () => buildWorkbook(); // สำหรับทดสอบอัตโนมัติ
 
   // ---------- History ----------
   function addHistory(entry) {
@@ -573,9 +761,13 @@
   const s = {
     vat: $('#s-vat'), wht: $('#s-wht'), payee: $('#s-payee'), thresholdAmt: $('#s-threshold-amt'), theme: $('#s-theme'),
     agencyName: $('#s-agency-name'), agencyTaxId: $('#s-agency-taxid'), agencyPhone: $('#s-agency-phone'),
-    agencyAddress: $('#s-agency-address'), agencySigner: $('#s-agency-signer'),
+    agencyAddress: $('#s-agency-address'), agencySigner: $('#s-agency-signer'), agencyShort: $('#s-agency-short'),
+    agencyStaff: $('#s-agency-staff'), agencyFinance: $('#s-agency-finance'), agencyDirector: $('#s-agency-director'),
   };
-  const AGENCY_FIELDS = [['agencyName', 'name'], ['agencyTaxId', 'taxId'], ['agencyPhone', 'phone'], ['agencyAddress', 'address'], ['agencySigner', 'signer']];
+  const AGENCY_FIELDS = [
+    ['agencyName', 'name'], ['agencyTaxId', 'taxId'], ['agencyPhone', 'phone'], ['agencyAddress', 'address'], ['agencySigner', 'signer'],
+    ['agencyShort', 'short'], ['agencyStaff', 'staff'], ['agencyFinance', 'financeHead'], ['agencyDirector', 'director'],
+  ];
   function renderSettings() {
     s.vat.value = settings.vatRate;
     s.wht.value = String(settings.whtRate);
