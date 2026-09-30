@@ -1,10 +1,11 @@
 /* VAT7 ครู – service worker (offline-first app shell) */
-const CACHE = 'vat7-v1.1.0';
+const CACHE = 'vat7-v1.2.0';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './xlsx-writer.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',

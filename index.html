@@ -126,11 +126,11 @@
       </div>
       <label class="field">
         <span class="field-label">รายการซื้อ/จ้าง</span>
-        <input id="it-title" type="text" placeholder="เช่น วัสดุการศึกษา โรงเรียนบ้านตาเพชร" autocomplete="off">
+        <input id="it-title" type="text" placeholder="เช่น วัสดุสำนักงาน / จ้างซ่อมคอมพิวเตอร์" autocomplete="off">
       </label>
       <label class="field">
         <span class="field-label">ชื่อผู้ประกอบการ / ผู้รับเงิน</span>
-        <input id="it-vendor" type="text" placeholder="เช่น หจก. เมืองแก้วพาณิชย์" autocomplete="off">
+        <input id="it-vendor" type="text" placeholder="ชื่อร้าน / บริษัท / หจก. / บุคคล" autocomplete="off">
       </label>
       <div class="field-row">
         <label class="field">
@@ -147,9 +147,33 @@
       </div>
       <label class="field">
         <span class="field-label">ที่อยู่ผู้ประกอบการ</span>
-        <textarea id="it-address" rows="2" placeholder="เช่น 109/8 หมู่ 9 ตำบลรัตนบุรี อำเภอรัตนบุรี จังหวัดสุรินทร์ 32130"></textarea>
+        <textarea id="it-address" rows="2" placeholder="เลขที่ หมู่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></textarea>
       </label>
     </div>
+
+    <details class="card card-details">
+      <summary><h2>ข้อมูลงบประมาณ (สำหรับงบหน้า)</h2></summary>
+      <label class="field">
+        <span class="field-label">แผนงาน</span>
+        <input id="it-plan" type="text" placeholder="ชื่อแผนงาน" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="field-label">ผลผลิต / โครงการ</span>
+        <input id="it-output" type="text" placeholder="ชื่อผลผลิตหรือโครงการ" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="field-label">กิจกรรมหลัก</span>
+        <input id="it-activity" type="text" placeholder="ชื่อกิจกรรมหลัก" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="field-label">งบรายจ่าย</span>
+        <input id="it-budget" type="text" placeholder="เช่น งบดำเนินงาน (ค่าตอบแทน ใช้สอย และวัสดุ)" autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="field-label">หมายเหตุ</span>
+        <input id="it-remark" type="text" placeholder="ข้อความในช่องหมายเหตุ (ถ้ามี)" autocomplete="off">
+      </label>
+    </details>
 
     <div class="card">
       <h2>รายการ</h2>
@@ -201,10 +225,15 @@
     </div>
 
     <div class="card">
-      <h2>พิมพ์เอกสาร</h2>
-      <p class="muted">ข้อมูลส่วนราชการที่ใช้ในเอกสาร ตั้งค่าได้ในหน้า “ตั้งค่า”</p>
+      <h2>เอกสารประกอบฎีกา</h2>
+      <p class="muted">ข้อมูลส่วนราชการและผู้ลงนามที่ใช้ในเอกสาร ตั้งค่าได้ในหน้า “ตั้งค่า”</p>
+      <button type="button" class="btn btn-primary btn-block" id="it-export">⬇ Export เป็น Excel (.xlsx ครบทุกแบบฟอร์ม)</button>
+      <p class="muted small">ไฟล์ Excel มีสูตรคำนวณในเซลล์ แก้ตัวเลขแล้วคำนวณใหม่เองได้</p>
+      <h3 class="sub">พิมพ์</h3>
       <div class="actions">
         <button type="button" class="btn" data-print="items">ตารางรายการ</button>
+        <button type="button" class="btn" data-print="budget">งบหน้าประกอบฎีกา</button>
+        <button type="button" class="btn" data-print="payorder">ใบสั่งจ่าย</button>
         <button type="button" class="btn" data-print="attach">แบบแนบฎีกาแสดงรายการภาษี</button>
         <button type="button" class="btn" data-print="cert">ใบรับรองหักภาษี (บก.28)</button>
       </div>
@@ -262,7 +291,7 @@
       <h2>ข้อมูลส่วนราชการ (ใช้พิมพ์เอกสาร)</h2>
       <label class="field">
         <span class="field-label">ชื่อส่วนราชการ / โรงเรียน</span>
-        <input id="s-agency-name" type="text" placeholder="เช่น สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุรินทร์ เขต 2" autocomplete="off">
+        <input id="s-agency-name" type="text" placeholder="ชื่อโรงเรียน / สพป. / สพม. ตามที่ปรากฏในเอกสาร" autocomplete="off">
       </label>
       <div class="field-row">
         <label class="field">
@@ -271,16 +300,34 @@
         </label>
         <label class="field">
           <span class="field-label">โทรศัพท์</span>
-          <input id="s-agency-phone" type="text" inputmode="tel" placeholder="0-4459-9270" autocomplete="off">
+          <input id="s-agency-phone" type="text" inputmode="tel" placeholder="0-0000-0000" autocomplete="off">
         </label>
       </div>
       <label class="field">
         <span class="field-label">ที่ตั้ง</span>
-        <textarea id="s-agency-address" rows="2" placeholder="เลขที่ 219 หมู่ 1 ถนนศรีรัตน์ ตำบลรัตนบุรี อำเภอรัตนบุรี จังหวัดสุรินทร์ 32130"></textarea>
+        <textarea id="s-agency-address" rows="2" placeholder="เลขที่ หมู่ ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"></textarea>
       </label>
       <label class="field">
-        <span class="field-label">ตำแหน่งผู้ลงนาม</span>
-        <input id="s-agency-signer" type="text" placeholder="เช่น ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุรินทร์ เขต 2" autocomplete="off">
+        <span class="field-label">ชื่อย่อส่วนราชการ (ใช้ในลายเซ็น)</span>
+        <input id="s-agency-short" type="text" placeholder="ชื่อย่อที่ใช้ต่อท้าย ผอ. / รอง ผอ." autocomplete="off">
+      </label>
+      <label class="field">
+        <span class="field-label">ตำแหน่งผู้ลงนาม (แบบแนบฎีกา / บก.28)</span>
+        <input id="s-agency-signer" type="text" placeholder="เช่น ผู้อำนวยการโรงเรียน... / ผู้อำนวยการสำนักงานเขตพื้นที่..." autocomplete="off">
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">ชื่อเจ้าหน้าที่ผู้จัดทำ</span>
+          <input id="s-agency-staff" type="text" placeholder="นาง/นาย ..." autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label">ชื่อ ผอ.กลุ่มบริหารงานการเงินฯ</span>
+          <input id="s-agency-finance" type="text" placeholder="นาง/นาย ..." autocomplete="off">
+        </label>
+      </div>
+      <label class="field">
+        <span class="field-label">ชื่อผู้อำนวยการ (ผู้อนุมัติ)</span>
+        <input id="s-agency-director" type="text" placeholder="นาง/นาย ..." autocomplete="off">
       </label>
     </div>
 
@@ -338,6 +385,7 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="xlsx-writer.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>
