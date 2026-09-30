@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>VAT7 ครู – คำนวณ VAT 7% ถอด/บวก VAT</title>
-  <meta name="description" content="แอพคำนวณภาษีมูลค่าเพิ่ม 7% สำหรับครูและงานพัสดุโรงเรียน ถอด VAT บวก VAT หัก ณ ที่จ่าย อ่านจำนวนเงินเป็นตัวอักษร ใช้งานออฟไลน์ได้">
+  <meta name="description" content="แอพคำนวณภาษีมูลค่าเพิ่ม 7% สำหรับครูและงานพัสดุโรงเรียน ถอด VAT บวก VAT หัก ณ ที่จ่าย ค่าปรับ พิมพ์แบบแนบฎีกาและ บก.28 ใช้งานออฟไลน์ได้">
   <meta name="theme-color" content="#0f766e">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -45,7 +45,7 @@
       </div>
 
       <label class="field">
-        <span class="field-label" id="q-amount-label">ยอดเงินรวม VAT (บาท)</span>
+        <span class="field-label" id="q-amount-label">จำนวนเงินที่ขอเบิก รวม VAT (บาท)</span>
         <input id="q-amount" class="input-big" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" enterkeyhint="done">
       </label>
       <div class="chips" id="q-chips">
@@ -56,26 +56,39 @@
         <button type="button" class="chip chip-clear" data-add="clear">ล้าง</button>
       </div>
 
-      <div class="results">
-        <div class="kv"><span>ราคาก่อน VAT</span><b id="q-base">0.00</b></div>
-        <div class="kv"><span id="q-vat-label">VAT 7%</span><b id="q-vat">0.00</b></div>
-        <div class="kv kv-total"><span>รวมทั้งสิ้น</span><b id="q-total">0.00</b></div>
-        <div class="baht-text" id="q-text">ศูนย์บาทถ้วน</div>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">ผู้รับเงิน</span>
+          <select id="q-payee">
+            <option value="juristic">นิติบุคคล (บริษัท/หจก.)</option>
+            <option value="individual">บุคคลธรรมดา</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">หัก ณ ที่จ่าย</span>
+          <select id="q-wht">
+            <option value="0">ไม่หัก</option>
+            <option value="1">1% (ส่วนราชการจ่าย)</option>
+            <option value="2">2%</option>
+            <option value="3">3% (ค่าบริการ)</option>
+            <option value="5">5% (ค่าเช่า)</option>
+          </select>
+        </label>
       </div>
-
       <label class="field">
-        <span class="field-label">ภาษีหัก ณ ที่จ่าย</span>
-        <select id="q-wht">
-          <option value="0">ไม่หัก</option>
-          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
-          <option value="2">2%</option>
-          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
-          <option value="5">5% (ค่าเช่า)</option>
-        </select>
+        <span class="field-label">หักค่าปรับ (บาท ถ้ามี)</span>
+        <input id="q-penalty" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" class="num">
       </label>
-      <div class="results" id="q-wht-box" hidden>
-        <div class="kv"><span id="q-wht-label">หัก ณ ที่จ่าย 1%</span><b id="q-wht-amt">0.00</b></div>
-        <div class="kv kv-total kv-net"><span>ยอดจ่ายสุทธิ</span><b id="q-net">0.00</b></div>
+
+      <div class="results">
+        <div class="kv kv-strong"><span>จำนวนเงินที่ขอเบิก (รวม VAT)</span><b id="q-total">0.00</b></div>
+        <div class="baht-text" id="q-text-total">ศูนย์บาทถ้วน</div>
+        <div class="kv"><span id="q-vat-label">ภาษีมูลค่าเพิ่ม 7%</span><b id="q-vat">0.00</b></div>
+        <div class="kv"><span>ค่าสินค้าหรือบริการ (ก่อน VAT)</span><b id="q-base">0.00</b></div>
+        <div class="kv" id="q-wht-row"><span id="q-wht-label">ภาษีเงินได้หัก ณ ที่จ่าย 1%</span><b id="q-wht-amt">0.00</b></div>
+        <div class="kv" id="q-penalty-row" hidden><span>หัก ค่าปรับ</span><b id="q-penalty-amt">0.00</b></div>
+        <div class="kv kv-total"><span>จำนวนเงินที่ขอรับ (สุทธิ)</span><b id="q-net">0.00</b></div>
+        <div class="baht-text" id="q-text-net">ศูนย์บาทถ้วน</div>
         <p class="note" id="q-wht-note" hidden></p>
       </div>
 
@@ -87,62 +100,113 @@
     </div>
 
     <div class="card card-help">
-      <h2>วิธีคิด</h2>
+      <h2>วิธีคิด (ตามแบบฎีกาเบิกจ่าย)</h2>
       <ul class="help-list">
-        <li><b>ถอด VAT</b> (ยอดรวม VAT แล้ว): ราคาก่อน VAT = ยอดรวม × 100 ÷ 107, VAT = ยอดรวม − ราคาก่อน VAT</li>
-        <li><b>บวก VAT</b> (ยอดยังไม่รวม VAT): VAT = ราคาก่อน VAT × 7 ÷ 100, ยอดรวม = ราคาก่อน VAT + VAT</li>
-        <li><b>หัก ณ ที่จ่าย</b> คิดจากราคาก่อน VAT แล้วหักออกจากยอดรวมทั้งสิ้น (ส่วนราชการหัก 1% เมื่อยอดตั้งแต่ 10,000 บาทขึ้นไป โปรดตรวจสอบกับเจ้าหน้าที่การเงินอีกครั้ง)</li>
+        <li><b>ถอด VAT</b>: ค่าสินค้าหรือบริการ = จำนวนเงินที่เบิก × 100 ÷ 107, ภาษีมูลค่าเพิ่ม = จำนวนเงินที่เบิก − ค่าสินค้า</li>
+        <li><b>บวก VAT</b>: ภาษีมูลค่าเพิ่ม = ค่าสินค้า × 7 ÷ 100, จำนวนเงินที่เบิก = ค่าสินค้า + VAT</li>
+        <li><b>ภาษีเงินได้หัก ณ ที่จ่าย 1%</b> คิดจากค่าสินค้าหรือบริการ (ก่อน VAT) — <b>นิติบุคคล</b> (บริษัท/หจก.) หักทุกจำนวน (ม.69 ทวิ), <b>บุคคลธรรมดา</b> หักเมื่อตั้งแต่ 10,000 บาทขึ้นไป (ม.50(4))</li>
+        <li><b>จำนวนเงินที่ขอรับ</b> = จำนวนเงินที่เบิก − ภาษีหัก ณ ที่จ่าย − ค่าปรับ</li>
       </ul>
     </div>
   </section>
 
-  <!-- ===== รายการสินค้า ===== -->
+  <!-- ===== ฎีกา / รายการสินค้า ===== -->
   <section id="view-items" class="view" hidden>
     <div class="card">
+      <h2>ข้อมูลฎีกาและผู้ขาย</h2>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">ฎีกาที่</span>
+          <input id="it-docno" type="text" placeholder="เช่น 125" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label">ปีงบประมาณ</span>
+          <input id="it-fy" type="text" inputmode="numeric" placeholder="2569" autocomplete="off">
+        </label>
+      </div>
       <label class="field">
-        <span class="field-label">ชื่อรายการ / เรื่อง (ไม่บังคับ)</span>
-        <input id="it-title" type="text" placeholder="เช่น ซื้อวัสดุสำนักงาน ภาคเรียนที่ 1" autocomplete="off">
+        <span class="field-label">รายการซื้อ/จ้าง</span>
+        <input id="it-title" type="text" placeholder="เช่น วัสดุการศึกษา โรงเรียนบ้านตาเพชร" autocomplete="off">
       </label>
+      <label class="field">
+        <span class="field-label">ชื่อผู้ประกอบการ / ผู้รับเงิน</span>
+        <input id="it-vendor" type="text" placeholder="เช่น หจก. เมืองแก้วพาณิชย์" autocomplete="off">
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">เลขประจำตัวผู้เสียภาษี</span>
+          <input id="it-taxid" type="text" inputmode="numeric" placeholder="13 หลัก" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label">ประเภทผู้รับเงิน</span>
+          <select id="it-payee">
+            <option value="juristic">นิติบุคคล (บริษัท/หจก.)</option>
+            <option value="individual">บุคคลธรรมดา</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span class="field-label">ที่อยู่ผู้ประกอบการ</span>
+        <textarea id="it-address" rows="2" placeholder="เช่น 109/8 หมู่ 9 ตำบลรัตนบุรี อำเภอรัตนบุรี จังหวัดสุรินทร์ 32130"></textarea>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>รายการ</h2>
       <div class="seg" role="radiogroup" aria-label="ราคาต่อหน่วยที่กรอกเป็นแบบใด">
         <button type="button" class="seg-btn" data-inclusive="1" role="radio" aria-checked="true">ราคารวม VAT แล้ว<small>ถอด VAT ออก</small></button>
         <button type="button" class="seg-btn" data-inclusive="0" role="radio" aria-checked="false">ราคายังไม่รวม VAT<small>บวก VAT เพิ่ม</small></button>
       </div>
-
       <div id="it-rows" class="item-rows"></div>
       <button type="button" class="btn btn-add" id="it-add">＋ เพิ่มรายการ</button>
     </div>
 
     <div class="card">
+      <h2>สรุปยอดตามฎีกา</h2>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">หัก ณ ที่จ่าย</span>
+          <select id="it-wht">
+            <option value="0">ไม่หัก</option>
+            <option value="1">1% (ส่วนราชการจ่าย)</option>
+            <option value="2">2%</option>
+            <option value="3">3% (ค่าบริการ)</option>
+            <option value="5">5% (ค่าเช่า)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">หักค่าปรับ (บาท)</span>
+          <input id="it-penalty" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" class="num">
+        </label>
+      </div>
       <div class="results">
         <div class="kv"><span>จำนวนรายการ</span><b id="it-count">0</b></div>
-        <div class="kv"><span>รวมก่อน VAT</span><b id="it-base">0.00</b></div>
-        <div class="kv"><span id="it-vat-label">VAT 7%</span><b id="it-vat">0.00</b></div>
-        <div class="kv kv-total"><span>รวมทั้งสิ้น</span><b id="it-total">0.00</b></div>
-        <div class="baht-text" id="it-text">ศูนย์บาทถ้วน</div>
-      </div>
-
-      <label class="field">
-        <span class="field-label">ภาษีหัก ณ ที่จ่าย</span>
-        <select id="it-wht">
-          <option value="0">ไม่หัก</option>
-          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
-          <option value="2">2%</option>
-          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
-          <option value="5">5% (ค่าเช่า)</option>
-        </select>
-      </label>
-      <div class="results" id="it-wht-box" hidden>
-        <div class="kv"><span id="it-wht-label">หัก ณ ที่จ่าย 1%</span><b id="it-wht-amt">0.00</b></div>
-        <div class="kv kv-total kv-net"><span>ยอดจ่ายสุทธิ</span><b id="it-net">0.00</b></div>
+        <div class="kv kv-strong"><span>จำนวนเงินที่เบิกตามฎีกา (รวม VAT)</span><b id="it-total">0.00</b></div>
+        <div class="baht-text" id="it-text-total">ศูนย์บาทถ้วน</div>
+        <div class="kv"><span id="it-vat-label">ภาษีมูลค่าเพิ่ม 7%</span><b id="it-vat">0.00</b></div>
+        <div class="kv"><span>ค่าสินค้าหรือบริการ (ก่อน VAT)</span><b id="it-base">0.00</b></div>
+        <div class="kv" id="it-wht-row"><span id="it-wht-label">ภาษีเงินได้หัก ณ ที่จ่าย 1%</span><b id="it-wht-amt">0.00</b></div>
+        <div class="kv" id="it-penalty-row" hidden><span>หัก ค่าปรับ</span><b id="it-penalty-amt">0.00</b></div>
+        <div class="kv kv-total"><span>จำนวนเงินขอรับ (สุทธิ)</span><b id="it-net">0.00</b></div>
+        <div class="baht-text" id="it-text-net">ศูนย์บาทถ้วน</div>
         <p class="note" id="it-wht-note" hidden></p>
       </div>
 
       <div class="actions">
         <button type="button" class="btn btn-primary" id="it-copy">คัดลอกสรุป</button>
         <button type="button" class="btn" id="it-share">แชร์</button>
-        <button type="button" class="btn" id="it-print">พิมพ์</button>
         <button type="button" class="btn" id="it-save">บันทึกประวัติ</button>
         <button type="button" class="btn btn-danger-ghost" id="it-clear">ล้างทั้งหมด</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>พิมพ์เอกสาร</h2>
+      <p class="muted">ข้อมูลส่วนราชการที่ใช้ในเอกสาร ตั้งค่าได้ในหน้า “ตั้งค่า”</p>
+      <div class="actions">
+        <button type="button" class="btn" data-print="items">ตารางรายการ</button>
+        <button type="button" class="btn" data-print="attach">แบบแนบฎีกาแสดงรายการภาษี</button>
+        <button type="button" class="btn" data-print="cert">ใบรับรองหักภาษี (บก.28)</button>
       </div>
     </div>
   </section>
@@ -168,23 +232,55 @@
         <span class="field-label">อัตรา VAT (%)</span>
         <input id="s-vat" type="number" inputmode="decimal" min="0" max="100" step="0.5">
       </label>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">หัก ณ ที่จ่ายเริ่มต้น</span>
+          <select id="s-wht">
+            <option value="0">ไม่หัก</option>
+            <option value="1">1% (ส่วนราชการจ่าย)</option>
+            <option value="2">2%</option>
+            <option value="3">3% (ค่าบริการ)</option>
+            <option value="5">5% (ค่าเช่า)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">ผู้รับเงินเริ่มต้น</span>
+          <select id="s-payee">
+            <option value="juristic">นิติบุคคล (บริษัท/หจก.)</option>
+            <option value="individual">บุคคลธรรมดา</option>
+          </select>
+        </label>
+      </div>
       <label class="field">
-        <span class="field-label">หัก ณ ที่จ่ายเริ่มต้น</span>
-        <select id="s-wht">
-          <option value="0">ไม่หัก</option>
-          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
-          <option value="2">2%</option>
-          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
-          <option value="5">5% (ค่าเช่า)</option>
-        </select>
-      </label>
-      <label class="check">
-        <input id="s-threshold" type="checkbox">
-        <span>หัก ณ ที่จ่ายเฉพาะเมื่อราคาก่อน VAT ถึงเกณฑ์ขั้นต่ำ</span>
-      </label>
-      <label class="field">
-        <span class="field-label">เกณฑ์ขั้นต่ำ (บาท)</span>
+        <span class="field-label">เกณฑ์ขั้นต่ำหัก ณ ที่จ่าย สำหรับบุคคลธรรมดา (บาท)</span>
         <input id="s-threshold-amt" type="number" inputmode="numeric" min="0" step="1">
+      </label>
+      <p class="muted">นิติบุคคลหักทุกจำนวนตาม ม.69 ทวิ ส่วนบุคคลธรรมดาหักเมื่อถึงเกณฑ์ตาม ม.50(4)</p>
+    </div>
+
+    <div class="card">
+      <h2>ข้อมูลส่วนราชการ (ใช้พิมพ์เอกสาร)</h2>
+      <label class="field">
+        <span class="field-label">ชื่อส่วนราชการ / โรงเรียน</span>
+        <input id="s-agency-name" type="text" placeholder="เช่น สำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุรินทร์ เขต 2" autocomplete="off">
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">เลขประจำตัวผู้เสียภาษี</span>
+          <input id="s-agency-taxid" type="text" inputmode="numeric" placeholder="13 หลัก" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label">โทรศัพท์</span>
+          <input id="s-agency-phone" type="text" inputmode="tel" placeholder="0-4459-9270" autocomplete="off">
+        </label>
+      </div>
+      <label class="field">
+        <span class="field-label">ที่ตั้ง</span>
+        <textarea id="s-agency-address" rows="2" placeholder="เลขที่ 219 หมู่ 1 ถนนศรีรัตน์ ตำบลรัตนบุรี อำเภอรัตนบุรี จังหวัดสุรินทร์ 32130"></textarea>
+      </label>
+      <label class="field">
+        <span class="field-label">ตำแหน่งผู้ลงนาม</span>
+        <input id="s-agency-signer" type="text" placeholder="เช่น ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษาประถมศึกษาสุรินทร์ เขต 2" autocomplete="off">
       </label>
     </div>
 
@@ -218,7 +314,7 @@
 
 </main>
 
-<!-- แผ่นพิมพ์ (ใช้ตอนสั่งพิมพ์รายการสินค้า) -->
+<!-- แผ่นพิมพ์ (สร้างตอนสั่งพิมพ์) -->
 <div id="print-sheet" aria-hidden="true"></div>
 
 <nav class="tabbar" aria-label="เมนูหลัก">
@@ -227,8 +323,8 @@
     <span>คำนวณเร็ว</span>
   </a>
   <a href="#/items" data-view="items">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
-    <span>รายการสินค้า</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
+    <span>ฎีกา/รายการ</span>
   </a>
   <a href="#/history" data-view="history">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>

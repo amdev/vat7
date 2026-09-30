@@ -1,5 +1,5 @@
 /* VAT7 ครู – service worker (offline-first app shell) */
-const CACHE = 'vat7-v1.0.0';
+const CACHE = 'vat7-v1.1.0';
 const ASSETS = [
   './',
   './index.html',
@@ -50,7 +50,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static assets: cache first, refresh in background (stale-while-revalidate)
+  // App shell (js/css/manifest): network first so HTML and script always match; cache when offline
+  if (/\.(js|css|webmanifest)$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Icons and other static files: cache first, refresh in background
   event.respondWith(
     caches.match(req).then(cached => {
       const network = fetch(req)

@@ -94,13 +94,19 @@ main { max-width: 720px; margin: 0 auto; padding: 16px; }
 /* Fields */
 .field { display: block; margin-bottom: 12px; }
 .field-label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
-input[type="text"], input[type="number"], select {
+input[type="text"], input[type="number"], select, textarea {
   width: 100%; font: inherit; padding: 10px 12px; min-height: 44px;
   border: 1px solid var(--border); border-radius: 10px;
   background: var(--card); color: var(--text);
 }
-input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
+textarea { resize: vertical; line-height: 1.4; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
 .input-big { font-size: 2rem; font-weight: 700; text-align: right; padding: 8px 14px; font-variant-numeric: tabular-nums; }
+input.num { text-align: right; font-variant-numeric: tabular-nums; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-row .field { min-width: 0; }
+@media (max-width: 380px) { .field-row { grid-template-columns: 1fr; gap: 0; } }
+.kv-strong b { font-size: 1.3rem; }
 .check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: .95rem; cursor: pointer; }
 .check input { width: 20px; height: 20px; margin: 3px 0 0; flex: none; accent-color: var(--primary); }
 
@@ -187,16 +193,27 @@ input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 1
 /* Print */
 #print-sheet { display: none; }
 @media print {
-  body { background: #fff; color: #000; padding: 0; font-size: 12pt; }
+  body { background: #fff; color: #000; padding: 0; font-size: 12pt; font-family: "TH Sarabun New", "TH SarabunPSK", "Sarabun", "Leelawadee UI", Tahoma, sans-serif; }
   .topbar, .tabbar, .banner, .toast, main { display: none !important; }
   #print-sheet { display: block; padding: 0; }
-  #print-sheet h2 { font-size: 16pt; margin: 0 0 4pt; }
-  #print-sheet .print-meta { font-size: 10pt; color: #444; margin-bottom: 10pt; }
-  #print-sheet table { width: 100%; border-collapse: collapse; }
-  #print-sheet th, #print-sheet td { border: 1px solid #000; padding: 4pt 6pt; }
-  #print-sheet th { background: #eee; }
-  #print-sheet td.num, #print-sheet th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  #print-sheet td.c { text-align: center; }
-  #print-sheet tfoot td { font-weight: 600; }
-  #print-sheet .print-text { margin-top: 8pt; font-size: 11pt; }
+  .pf { color: #000; line-height: 1.45; }
+  .pf h2 { font-size: 16pt; margin: 0 0 6pt; }
+  .pf-center { text-align: center; }
+  .pf-meta { font-size: 10pt; color: #444; margin-bottom: 8pt; }
+  .pf-line { margin: 2pt 0; }
+  .pf-indent { text-indent: 2.5em; }
+  .pf-box { display: inline-block; width: 1.1em; height: 1.1em; line-height: 1.05em; border: 1px solid #000; text-align: center; vertical-align: middle; font-size: 10pt; margin-right: 2pt; }
+  .pf-table { width: 100%; border-collapse: collapse; margin-top: 8pt; page-break-inside: avoid; }
+  .pf-table th, .pf-table td { border: 1px solid #000; padding: 3pt 5pt; vertical-align: top; }
+  .pf-table th { background: #eee; font-weight: 600; text-align: center; }
+  .pf-table td.num, .pf-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pf-table td.c { text-align: center; }
+  .pf-table tfoot td { font-weight: 600; }
+  .pf-table.pf-small { font-size: 10pt; }
+  .pf-table .pf-spacer td { height: 28pt; }
+  .pf-nowrap { white-space: nowrap; }
+  .pf-text { margin-top: 8pt; font-size: 12pt; }
+  .pf-sign { margin-top: 28pt; margin-left: auto; width: 60%; text-align: center; }
+  .pf-sign div { margin: 4pt 0; }
+  .pf-foot { display: flex; justify-content: space-between; margin-top: 20pt; font-size: 10pt; }
 }
