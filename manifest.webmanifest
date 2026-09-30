@@ -1,0 +1,24 @@
+{
+  "name": "VAT7 ครู – คำนวณภาษีมูลค่าเพิ่ม 7%",
+  "short_name": "VAT7 ครู",
+  "description": "คำนวณ VAT 7% ถอด/บวก VAT หัก ณ ที่จ่าย และอ่านจำนวนเงินเป็นตัวอักษร สำหรับครูและงานพัสดุโรงเรียน ใช้งานออฟไลน์ได้",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f5f7",
+  "theme_color": "#0f766e",
+  "categories": ["finance", "education", "utilities"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "คำนวณเร็ว", "url": "./#/quick", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "รายการสินค้า", "url": "./#/items", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

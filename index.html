@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>VAT7 ครู – คำนวณ VAT 7% ถอด/บวก VAT</title>
+  <meta name="description" content="แอพคำนวณภาษีมูลค่าเพิ่ม 7% สำหรับครูและงานพัสดุโรงเรียน ถอด VAT บวก VAT หัก ณ ที่จ่าย อ่านจำนวนเงินเป็นตัวอักษร ใช้งานออฟไลน์ได้">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="VAT7 ครู">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <img src="icons/icon.svg" alt="" width="30" height="30">
+    <h1>VAT7 ครู</h1>
+    <span class="topbar-sub" id="topbar-rate">VAT 7%</span>
+  </div>
+</header>
+
+<div id="update-banner" class="banner" hidden>
+  <span>มีเวอร์ชันใหม่พร้อมใช้งาน</span>
+  <button id="btn-update" class="btn btn-small btn-primary" type="button">อัปเดต</button>
+</div>
+<div id="install-banner" class="banner" hidden>
+  <span>ติดตั้งแอพไว้ที่หน้าจอโฮม ใช้งานได้แม้ไม่มีเน็ต</span>
+  <button id="btn-install-banner" class="btn btn-small btn-primary" type="button">ติดตั้ง</button>
+  <button id="btn-install-dismiss" class="btn btn-small btn-ghost" type="button" aria-label="ปิด">✕</button>
+</div>
+
+<main id="app">
+
+  <!-- ===== คำนวณเร็ว ===== -->
+  <section id="view-quick" class="view">
+    <div class="card">
+      <div class="seg" role="radiogroup" aria-label="ยอดเงินที่กรอกเป็นแบบใด">
+        <button type="button" class="seg-btn" data-inclusive="1" role="radio" aria-checked="true">รวม VAT แล้ว<small>ถอด VAT ออก</small></button>
+        <button type="button" class="seg-btn" data-inclusive="0" role="radio" aria-checked="false">ยังไม่รวม VAT<small>บวก VAT เพิ่ม</small></button>
+      </div>
+
+      <label class="field">
+        <span class="field-label" id="q-amount-label">ยอดเงินรวม VAT (บาท)</span>
+        <input id="q-amount" class="input-big" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" enterkeyhint="done">
+      </label>
+      <div class="chips" id="q-chips">
+        <button type="button" class="chip" data-add="10">+10</button>
+        <button type="button" class="chip" data-add="100">+100</button>
+        <button type="button" class="chip" data-add="1000">+1,000</button>
+        <button type="button" class="chip" data-add="10000">+10,000</button>
+        <button type="button" class="chip chip-clear" data-add="clear">ล้าง</button>
+      </div>
+
+      <div class="results">
+        <div class="kv"><span>ราคาก่อน VAT</span><b id="q-base">0.00</b></div>
+        <div class="kv"><span id="q-vat-label">VAT 7%</span><b id="q-vat">0.00</b></div>
+        <div class="kv kv-total"><span>รวมทั้งสิ้น</span><b id="q-total">0.00</b></div>
+        <div class="baht-text" id="q-text">ศูนย์บาทถ้วน</div>
+      </div>
+
+      <label class="field">
+        <span class="field-label">ภาษีหัก ณ ที่จ่าย</span>
+        <select id="q-wht">
+          <option value="0">ไม่หัก</option>
+          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
+          <option value="2">2%</option>
+          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
+          <option value="5">5% (ค่าเช่า)</option>
+        </select>
+      </label>
+      <div class="results" id="q-wht-box" hidden>
+        <div class="kv"><span id="q-wht-label">หัก ณ ที่จ่าย 1%</span><b id="q-wht-amt">0.00</b></div>
+        <div class="kv kv-total kv-net"><span>ยอดจ่ายสุทธิ</span><b id="q-net">0.00</b></div>
+        <p class="note" id="q-wht-note" hidden></p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="q-copy">คัดลอกผล</button>
+        <button type="button" class="btn" id="q-share">แชร์</button>
+        <button type="button" class="btn" id="q-save">บันทึกประวัติ</button>
+      </div>
+    </div>
+
+    <div class="card card-help">
+      <h2>วิธีคิด</h2>
+      <ul class="help-list">
+        <li><b>ถอด VAT</b> (ยอดรวม VAT แล้ว): ราคาก่อน VAT = ยอดรวม × 100 ÷ 107, VAT = ยอดรวม − ราคาก่อน VAT</li>
+        <li><b>บวก VAT</b> (ยอดยังไม่รวม VAT): VAT = ราคาก่อน VAT × 7 ÷ 100, ยอดรวม = ราคาก่อน VAT + VAT</li>
+        <li><b>หัก ณ ที่จ่าย</b> คิดจากราคาก่อน VAT แล้วหักออกจากยอดรวมทั้งสิ้น (ส่วนราชการหัก 1% เมื่อยอดตั้งแต่ 10,000 บาทขึ้นไป โปรดตรวจสอบกับเจ้าหน้าที่การเงินอีกครั้ง)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== รายการสินค้า ===== -->
+  <section id="view-items" class="view" hidden>
+    <div class="card">
+      <label class="field">
+        <span class="field-label">ชื่อรายการ / เรื่อง (ไม่บังคับ)</span>
+        <input id="it-title" type="text" placeholder="เช่น ซื้อวัสดุสำนักงาน ภาคเรียนที่ 1" autocomplete="off">
+      </label>
+      <div class="seg" role="radiogroup" aria-label="ราคาต่อหน่วยที่กรอกเป็นแบบใด">
+        <button type="button" class="seg-btn" data-inclusive="1" role="radio" aria-checked="true">ราคารวม VAT แล้ว<small>ถอด VAT ออก</small></button>
+        <button type="button" class="seg-btn" data-inclusive="0" role="radio" aria-checked="false">ราคายังไม่รวม VAT<small>บวก VAT เพิ่ม</small></button>
+      </div>
+
+      <div id="it-rows" class="item-rows"></div>
+      <button type="button" class="btn btn-add" id="it-add">＋ เพิ่มรายการ</button>
+    </div>
+
+    <div class="card">
+      <div class="results">
+        <div class="kv"><span>จำนวนรายการ</span><b id="it-count">0</b></div>
+        <div class="kv"><span>รวมก่อน VAT</span><b id="it-base">0.00</b></div>
+        <div class="kv"><span id="it-vat-label">VAT 7%</span><b id="it-vat">0.00</b></div>
+        <div class="kv kv-total"><span>รวมทั้งสิ้น</span><b id="it-total">0.00</b></div>
+        <div class="baht-text" id="it-text">ศูนย์บาทถ้วน</div>
+      </div>
+
+      <label class="field">
+        <span class="field-label">ภาษีหัก ณ ที่จ่าย</span>
+        <select id="it-wht">
+          <option value="0">ไม่หัก</option>
+          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
+          <option value="2">2%</option>
+          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
+          <option value="5">5% (ค่าเช่า)</option>
+        </select>
+      </label>
+      <div class="results" id="it-wht-box" hidden>
+        <div class="kv"><span id="it-wht-label">หัก ณ ที่จ่าย 1%</span><b id="it-wht-amt">0.00</b></div>
+        <div class="kv kv-total kv-net"><span>ยอดจ่ายสุทธิ</span><b id="it-net">0.00</b></div>
+        <p class="note" id="it-wht-note" hidden></p>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="it-copy">คัดลอกสรุป</button>
+        <button type="button" class="btn" id="it-share">แชร์</button>
+        <button type="button" class="btn" id="it-print">พิมพ์</button>
+        <button type="button" class="btn" id="it-save">บันทึกประวัติ</button>
+        <button type="button" class="btn btn-danger-ghost" id="it-clear">ล้างทั้งหมด</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ประวัติ ===== -->
+  <section id="view-history" class="view" hidden>
+    <div class="card">
+      <div class="card-head">
+        <h2>ประวัติการคำนวณ</h2>
+        <button type="button" class="btn btn-small btn-danger-ghost" id="hist-clear">ลบทั้งหมด</button>
+      </div>
+      <p class="muted">บันทึกไว้ในเครื่องนี้เท่านั้น เก็บล่าสุด 100 รายการ</p>
+      <div id="hist-list" class="hist-list"></div>
+      <p class="empty" id="hist-empty">ยังไม่มีประวัติ กดปุ่ม “บันทึกประวัติ” ในหน้าคำนวณเพื่อเก็บไว้ดูภายหลัง</p>
+    </div>
+  </section>
+
+  <!-- ===== ตั้งค่า ===== -->
+  <section id="view-settings" class="view" hidden>
+    <div class="card">
+      <h2>ตั้งค่าการคำนวณ</h2>
+      <label class="field">
+        <span class="field-label">อัตรา VAT (%)</span>
+        <input id="s-vat" type="number" inputmode="decimal" min="0" max="100" step="0.5">
+      </label>
+      <label class="field">
+        <span class="field-label">หัก ณ ที่จ่ายเริ่มต้น</span>
+        <select id="s-wht">
+          <option value="0">ไม่หัก</option>
+          <option value="1">1% (ส่วนราชการเป็นผู้จ่าย)</option>
+          <option value="2">2%</option>
+          <option value="3">3% (ค่าบริการ / จ้างทำของ)</option>
+          <option value="5">5% (ค่าเช่า)</option>
+        </select>
+      </label>
+      <label class="check">
+        <input id="s-threshold" type="checkbox">
+        <span>หัก ณ ที่จ่ายเฉพาะเมื่อราคาก่อน VAT ถึงเกณฑ์ขั้นต่ำ</span>
+      </label>
+      <label class="field">
+        <span class="field-label">เกณฑ์ขั้นต่ำ (บาท)</span>
+        <input id="s-threshold-amt" type="number" inputmode="numeric" min="0" step="1">
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>การแสดงผล</h2>
+      <label class="field">
+        <span class="field-label">ธีม</span>
+        <select id="s-theme">
+          <option value="auto">ตามระบบ</option>
+          <option value="light">สว่าง</option>
+          <option value="dark">มืด</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>ติดตั้งแอพ</h2>
+      <p class="muted">ติดตั้งไว้ที่หน้าจอโฮมเพื่อเปิดใช้ได้เร็วและใช้งานได้แม้ไม่มีอินเทอร์เน็ต</p>
+      <button type="button" class="btn btn-primary" id="btn-install" hidden>ติดตั้งลงเครื่อง</button>
+      <p class="muted" id="install-ios" hidden>บน iPhone/iPad: เปิดด้วย Safari แตะปุ่ม <b>แชร์</b> แล้วเลือก <b>เพิ่มลงในหน้าจอโฮม</b></p>
+      <p class="muted" id="install-done" hidden>ติดตั้งแอพแล้ว ✓</p>
+    </div>
+
+    <div class="card">
+      <h2>ข้อมูล</h2>
+      <p class="muted">ข้อมูลทั้งหมดเก็บอยู่ในเครื่องของคุณ ไม่มีการส่งไปที่เซิร์ฟเวอร์</p>
+      <button type="button" class="btn btn-danger-ghost" id="btn-reset">ล้างข้อมูลและการตั้งค่าทั้งหมด</button>
+      <p class="muted version">VAT7 ครู เวอร์ชัน <span id="app-version"></span></p>
+    </div>
+  </section>
+
+</main>
+
+<!-- แผ่นพิมพ์ (ใช้ตอนสั่งพิมพ์รายการสินค้า) -->
+<div id="print-sheet" aria-hidden="true"></div>
+
+<nav class="tabbar" aria-label="เมนูหลัก">
+  <a href="#/quick" data-view="quick" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h2m3 0h3M8 15h2m3 0h3M8 19h2m3 0h3"/></svg>
+    <span>คำนวณเร็ว</span>
+  </a>
+  <a href="#/items" data-view="items">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
+    <span>รายการสินค้า</span>
+  </a>
+  <a href="#/history" data-view="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span>ประวัติ</span>
+  </a>
+  <a href="#/settings" data-view="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    <span>ตั้งค่า</span>
+  </a>
+</nav>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
