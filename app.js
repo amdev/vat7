@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.2.1';
   const KEYS = {
     settings: 'vat7:settings',
     history: 'vat7:history',

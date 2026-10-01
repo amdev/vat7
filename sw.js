@@ -1,5 +1,6 @@
 /* VAT7 ครู – service worker (offline-first app shell) */
-const CACHE = 'vat7-v1.2.0';
+const CACHE = 'vat7-v1.2.1';
+const FONT_CACHE = 'vat7-fonts-v1';
 const ASSETS = [
   './',
   './index.html',
@@ -22,7 +23,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== FONT_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -35,6 +36,20 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // Web fonts (Google Fonts): cache first so they keep working offline
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    event.respondWith(
+      caches.open(FONT_CACHE).then(cache =>
+        cache.match(req).then(cached => cached || fetch(req).then(res => {
+          if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
+          return res;
+        }).catch(() => cached))
+      )
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return;
 
   // SPA navigation: network first, fall back to cached shell
